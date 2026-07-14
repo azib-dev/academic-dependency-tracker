@@ -1,65 +1,133 @@
-import Image from "next/image";
+"use client";
+
+import React, { useState } from "react";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/Tabs";
+import DashboardTab from "@/components/DashboardTab";
+import AssignmentsTab from "@/components/AssignmentsTab";
+import ReadingsTab from "@/components/ReadingsTab";
+import CoursesTab from "@/components/CoursesTab";
+import {
+  AddCourseModal,
+  AddReadingModal,
+  AddAssignmentModal,
+  LogTimeModal,
+} from "@/components/Modals";
+import { GraduationCap, LayoutDashboard, Calendar, BookOpen, Layers, Sparkles } from "lucide-react";
 
 export default function Home() {
+  const [activeTab, setActiveTab] = useState("dashboard");
+
+  // Modal states
+  const [isAddCourseOpen, setIsAddCourseOpen] = useState(false);
+  const [isAddReadingOpen, setIsAddReadingOpen] = useState(false);
+  const [isAddAssignmentOpen, setIsAddAssignmentOpen] = useState(false);
+  const [isLogTimeOpen, setIsLogTimeOpen] = useState(false);
+
+  // Time log tracking state
+  const [selectedAssignmentForTime, setSelectedAssignmentForTime] = useState<string | undefined>(undefined);
+
+  const handleOpenLogTime = (assignmentId?: string) => {
+    setSelectedAssignmentForTime(assignmentId);
+    setIsLogTimeOpen(true);
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-indigo-500/30 selection:text-white bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(99,102,241,0.15),rgba(255,255,255,0))]">
+      {/* Navbar / Header */}
+      <header className="border-b border-slate-900 bg-slate-950/80 backdrop-blur-md sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+              <GraduationCap className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-base font-bold bg-gradient-to-r from-white via-slate-200 to-indigo-400 bg-clip-text text-transparent flex items-center gap-1.5">
+                Academic Dependency Tracker
+              </h1>
+              <p className="text-3xs text-slate-400 font-medium">Syllabus Prerequisites & Study Estimations</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1 text-2xs text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 font-bold">
+              <Sparkles className="h-3.5 w-3.5" /> Local Server Active
+            </span>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+      </header>
+
+      {/* Main Container */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <div className="flex justify-center sm:justify-start">
+            <TabsList>
+              <TabsTrigger value="dashboard" className="flex items-center gap-2">
+                <LayoutDashboard className="h-4 w-4" /> Dashboard
+              </TabsTrigger>
+              <TabsTrigger value="assignments" className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" /> Assignments
+              </TabsTrigger>
+              <TabsTrigger value="readings" className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4" /> Readings
+              </TabsTrigger>
+              <TabsTrigger value="courses" className="flex items-center gap-2">
+                <Layers className="h-4 w-4" /> Courses & Mapping
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          {/* 1. Dashboard View */}
+          <TabsContent value="dashboard">
+            <DashboardTab
+              onSetActiveTab={setActiveTab}
+              onOpenLogTime={handleOpenLogTime}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+          </TabsContent>
+
+          {/* 2. Assignments View */}
+          <TabsContent value="assignments">
+            <AssignmentsTab
+              onOpenAddAssignment={() => setIsAddAssignmentOpen(true)}
+              onOpenLogTime={handleOpenLogTime}
+            />
+          </TabsContent>
+
+          {/* 3. Readings View */}
+          <TabsContent value="readings">
+            <ReadingsTab onOpenAddReading={() => setIsAddReadingOpen(true)} />
+          </TabsContent>
+
+          {/* 4. Courses & Syllabus Mapping View */}
+          <TabsContent value="courses">
+            <CoursesTab onOpenAddCourse={() => setIsAddCourseOpen(true)} />
+          </TabsContent>
+        </Tabs>
       </main>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-900 bg-slate-950/40 py-6 mt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 font-medium">
+          <p>© 2026 Academic Dependency Tracker. All rights reserved.</p>
+          <div className="flex gap-4">
+            <span className="hover:text-slate-400 transition cursor-pointer">Terms</span>
+            <span className="hover:text-slate-400 transition cursor-pointer">Privacy</span>
+            <span className="hover:text-slate-400 transition cursor-pointer">Help</span>
+          </div>
+        </div>
+      </footer>
+
+      {/* Dialog Modals */}
+      <AddCourseModal isOpen={isAddCourseOpen} onClose={() => setIsAddCourseOpen(false)} />
+      <AddReadingModal isOpen={isAddReadingOpen} onClose={() => setIsAddReadingOpen(false)} />
+      <AddAssignmentModal isOpen={isAddAssignmentOpen} onClose={() => setIsAddAssignmentOpen(false)} />
+      <LogTimeModal
+        isOpen={isLogTimeOpen}
+        onClose={() => setIsLogTimeOpen(false)}
+        preselectedAssignmentId={selectedAssignmentForTime}
+      />
     </div>
   );
 }
+
