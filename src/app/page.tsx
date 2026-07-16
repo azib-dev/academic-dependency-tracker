@@ -1434,7 +1434,7 @@ export default function Dashboard() {
                       // Connection styling based on active hover states or completion
                       const connectionId = `${pid}->${t._id}`;
                       const isLineActive = activeConnections.has(connectionId);
-                      const isPrereqCompleted = isTopicCompleted(pid, topics, assignments || [], readings || []);
+                      const isPrereqCompleted = isTopicCompleted(pid, topics || [], assignments || [], readings || []);
                       
                       let strokeColor = "url(#line-normal)";
                       let strokeWidth = 1.5;
@@ -1516,7 +1516,7 @@ export default function Dashboard() {
 
                       <div className="flex flex-col space-y-4 overflow-y-auto max-h-[460px] pr-1 py-1">
                         {columnTopics.map((t) => {
-                          const isCompleted = isTopicCompleted(t._id, topics, assignments || [], readings || []);
+                          const isCompleted = isTopicCompleted(t._id, topics || [], assignments || [], readings || []);
                           const isHighlighted = activeConnections.has(t._id);
                           const isHovered = hoveredTopicId === t._id;
                           const prereqCount = t.prerequisiteIds.length;
